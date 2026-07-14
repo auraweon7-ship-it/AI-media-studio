@@ -650,6 +650,7 @@
               <option value="수채화">수채화</option>
               <option value="애니메이션">애니메이션</option>
               <option value="미니멀">미니멀</option>
+              <option value="인포그래픽">인포그래픽</option>
             </select>
           </div>
         </div>
@@ -1054,6 +1055,24 @@
     const psOutput = document.getElementById('psOutput');
     const psEn = document.getElementById('ps-en');
     const psKo = document.getElementById('ps-ko');
+
+    // 인포그래픽 스타일용 상세 프롬프트(첨부 예시형 빈티지 인물/주제 인포그래픽 포스터)
+    function infographicPrompt(topic) {
+      return `A richly detailed vintage editorial INFOGRAPHIC POSTER about "${topic}", laid out with Korean text.
+Overall look: aged cream and beige paper texture, warm sepia tones with a dark maroon (#7b1f1f) accent, subtle East-Asian ink-wash brush textures, antique documentary feel, red seal stamps and calligraphy accents.
+Composition: a large title block on the top-left with the subject name in big bold typography plus a short subtitle and life dates; a central detailed sepia portrait or key illustration of the topic blended into brush strokes.
+Include several rounded-corner information cards, each with a dark maroon header bar, a small line icon, and a Korean heading, arranged in a clean grid:
+- "한 줄 정체성" one-line identity summary
+- "핵심 키워드" a grid of keywords each with a small monochrome icon
+- "대표 작품" or key items list with small thumbnails
+- "주요 업적" achievements as a checkmark list
+- a horizontal "연표" timeline along a line with milestone icons and year labels
+- "시대적 배경과 맥락" historical background
+- "영향과 유산" influence and legacy
+Bottom: a full-width maroon banner containing a short quote in Korean.
+Typography: bilingual Korean and hanja labels, elegant serif headings, small tabular captions, generous whitespace.
+Style: premium historical infographic, highly detailed, balanced layout, print-ready, 4k.`;
+    }
 
     function buildInstruction() {
       const parts = [
@@ -1676,16 +1695,21 @@
 
       if (state.mode === 'image') {
         if (!keys.openai) { showError('이미지 제작에는 OpenAI API 키가 필요합니다. 설정에서 입력하세요.'); return; }
-        if (!promptText) { showError('이미지 프롬프트가 비어 있습니다. 주제를 입력하거나 프롬프트를 먼저 생성하세요.'); return; }
+        // 인포그래픽 스타일이면 전용 템플릿 프롬프트 사용
+        const isInfographic = state.style === '인포그래픽';
+        const imgPrompt = isInfographic
+          ? infographicPrompt(state.subject.trim() || genPrompt || '주제')
+          : promptText;
+        if (!imgPrompt) { showError('이미지 프롬프트가 비어 있습니다. 주제를 입력하거나 프롬프트를 먼저 생성하세요.'); return; }
         generateBtn.disabled = true;
-        showLoading('OpenAI 이미지 모델로 생성하는 중…');
+        showLoading(isInfographic ? '인포그래픽 이미지를 생성하는 중…' : 'OpenAI 이미지 모델로 생성하는 중…');
         try {
           const res = await fetch('https://api.openai.com/v1/images/generations', {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${keys.openai}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
               model: 'gpt-image-1',
-              prompt: promptText,
+              prompt: imgPrompt,
               n: 1,
               size: state.imageSize.replace('×', 'x')
             })
@@ -1699,7 +1723,7 @@
           resultArea.innerHTML = `
             <div class="result-media"><div class="media-card">
               <div class="mc-head">
-                <span class="mc-tag">🖼️ 이미지 · ${state.imageSize}</span>
+                <span class="mc-tag">${isInfographic ? '📊 인포그래픽' : '🖼️ 이미지'} · ${state.imageSize}</span>
                 <button class="dl-btn" id="dlMain">⬇ 다운로드</button>
               </div>
               <img src="${src}" alt="생성 이미지">
