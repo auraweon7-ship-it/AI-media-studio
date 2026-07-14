@@ -606,7 +606,7 @@
     <div class="brand">
       <div class="logo">✦</div>
       <div>
-        <h1>AI 미디어 스튜디오 <span class="ver">v1.2</span></h1>
+        <h1>AI 미디어 스튜디오 <span class="ver">v1.3</span></h1>
         <span class="sub">이미지 · 영상 생성 워크스페이스</span>
       </div>
     </div>
@@ -675,6 +675,10 @@
                 <option value="1536×1024">1536 × 1024 (가로)</option>
                 <option value="1024×1536">1024 × 1536 (세로)</option>
               </select>
+            </div>
+            <div class="field full" id="eventCountField" style="display:none;">
+              <label>이벤트 개수 · <span id="ecVal">15</span>개</label>
+              <input type="range" id="opt-event-count" min="15" max="30" step="1" value="15">
             </div>
           </div>
         </div>
@@ -842,6 +846,7 @@
       subject: '',             // 공통: 주제
       style: '사실적 사진',     // 공통: 스타일
       imageSize: '1024×1024',  // 이미지: 크기
+      eventCount: 15,          // 타임라인: 이벤트 개수 (15~30)
       videoRatio: '16:9',      // 영상: 비율
       videoDuration: '5초',    // 영상: 재생 시간
       videoCount: 10,          // 영상: 다운로드 개수 (10~30)
@@ -869,6 +874,7 @@
       ];
       if (state.mode === 'image') {
         items.push(['크기', state.imageSize]);
+        if (state.style.includes('타임라인')) items.push(['이벤트 개수', state.eventCount + '개']);
       } else {
         items.push(['비율', state.videoRatio], ['재생 시간', state.videoDuration], ['영상 개수', state.videoCount + '개']);
       }
@@ -889,7 +895,19 @@
 
     // ── 입력 → 상태 동기화 ──
     el.subject.addEventListener('input', e => { state.subject = e.target.value; renderSummary(); });
-    el.style.addEventListener('change', e => { state.style = e.target.value; renderSummary(); });
+    const eventCountField = document.getElementById('eventCountField');
+    const eventCountEl = document.getElementById('opt-event-count');
+    const ecVal = document.getElementById('ecVal');
+    function toggleEventCount() {
+      const isTimeline = state.style.includes('타임라인');
+      eventCountField.style.display = isTimeline ? 'flex' : 'none';
+    }
+    el.style.addEventListener('change', e => { state.style = e.target.value; toggleEventCount(); renderSummary(); });
+    eventCountEl.addEventListener('input', e => {
+      state.eventCount = parseInt(e.target.value);
+      ecVal.textContent = state.eventCount;
+      renderSummary();
+    });
     el.imageSize.addEventListener('change', e => { state.imageSize = e.target.value; renderSummary(); });
     el.videoRatio.addEventListener('change', e => { state.videoRatio = e.target.value; renderSummary(); });
     el.videoDuration.addEventListener('change', e => { state.videoDuration = e.target.value; renderSummary(); });
@@ -906,6 +924,10 @@
       state.subject = '';
       state.style = '사실적 사진';
       state.imageSize = '1024×1024';
+      state.eventCount = 15;
+      eventCountEl.value = 15;
+      ecVal.textContent = '15';
+      toggleEventCount();
       state.videoRatio = '16:9';
       state.videoDuration = '5초';
       state.videoCount = 10;
@@ -1085,17 +1107,19 @@ Style: premium historical infographic, highly detailed, balanced layout, print-r
     }
 
     // 세로형 타임라인 인포그래픽
-    function verticalTimelinePrompt(topic) {
+    function verticalTimelinePrompt(topic, count) {
+      const n = count || 15;
       return `A clean modern VERTICAL TIMELINE infographic poster about "${topic}", laid out with Korean text, portrait orientation.
-A single vertical spine line runs down the center from top to bottom; 5 to 7 chronological milestone nodes are placed along it, alternating left and right.
+A single vertical spine line runs down the center from top to bottom; exactly ${n} chronological milestone nodes are placed along it, alternating left and right.
 Each milestone: a circular node with a small line icon on the spine, a bold year/date label, a short Korean heading, and 1-2 lines of Korean description inside a rounded card with a soft shadow.
 Top: a title block with the topic name and a short subtitle. Consistent accent color, generous whitespace, flat vector illustration style, subtle connecting lines from nodes to cards.
 Typography: clean Korean sans-serif headings, tabular date figures. Style: premium editorial infographic, high detail, balanced, print-ready, 4k.`;
     }
     // 가로형 타임라인 인포그래픽
-    function horizontalTimelinePrompt(topic) {
+    function horizontalTimelinePrompt(topic, count) {
+      const n = count || 15;
       return `A clean modern HORIZONTAL TIMELINE infographic poster about "${topic}", laid out with Korean text, landscape orientation.
-A single horizontal timeline line runs left to right across the middle; 5 to 7 chronological milestone nodes are spaced along it, with cards alternating above and below the line.
+A single horizontal timeline line runs left to right across the middle; exactly ${n} chronological milestone nodes are spaced along it, with cards alternating above and below the line.
 Each milestone: a circular node with a small line icon on the line, a bold year/date label, a short Korean heading, and 1-2 lines of Korean description inside a rounded card with a soft shadow and a thin connector to the line.
 Left or top: a title block with the topic name and subtitle. Consistent accent color, generous whitespace, flat vector illustration style.
 Typography: clean Korean sans-serif headings, tabular date figures. Style: premium editorial infographic, high detail, balanced, print-ready, 4k.`;
@@ -1731,7 +1755,7 @@ Typography: clean Korean sans-serif headings, tabular date figures. Style: premi
         const tmpl = templateStyles[state.style];
         const isTemplate = !!tmpl;
         const imgPrompt = isTemplate
-          ? tmpl(state.subject.trim() || genPrompt || '주제')
+          ? tmpl(state.subject.trim() || genPrompt || '주제', state.eventCount)
           : promptText;
         if (!imgPrompt) { showError('이미지 프롬프트가 비어 있습니다. 주제를 입력하거나 프롬프트를 먼저 생성하세요.'); return; }
         generateBtn.disabled = true;
