@@ -1715,7 +1715,7 @@ Style: premium historical infographic, highly detailed, balanced layout, print-r
             method: 'POST',
             headers: { 'Authorization': `Bearer ${keys.openai}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              model: 'gpt-image-1',
+              model: 'gpt-image-2',
               prompt: imgPrompt,
               n: 1,
               size: state.imageSize.replace('×', 'x')
