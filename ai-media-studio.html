@@ -606,7 +606,7 @@
     <div class="brand">
       <div class="logo">✦</div>
       <div>
-        <h1>AI 미디어 스튜디오 <span class="ver">v1.5</span></h1>
+        <h1>AI 미디어 스튜디오 <span class="ver">v1.6</span></h1>
         <span class="sub">이미지 · 영상 생성 워크스페이스</span>
       </div>
     </div>
@@ -898,11 +898,33 @@
     const eventCountField = document.getElementById('eventCountField');
     const eventCountEl = document.getElementById('opt-event-count');
     const ecVal = document.getElementById('ecVal');
-    function toggleEventCount() {
-      const isTimeline = state.style.includes('타임라인');
-      eventCountField.style.display = isTimeline ? 'flex' : 'none';
+    // 기본 이미지 크기 옵션
+    const DEFAULT_SIZES = [
+      ['1024×1024', '1024 × 1024 (정사각형)'],
+      ['1536×1024', '1536 × 1024 (가로)'],
+      ['1024×1536', '1024 × 1536 (세로)']
+    ];
+    function setSizeOptions(pairs, selected) {
+      el.imageSize.innerHTML = pairs.map(([v, l]) => `<option value="${v}">${l}</option>`).join('');
+      el.imageSize.value = selected || pairs[0][0];
+      state.imageSize = el.imageSize.value;
     }
-    el.style.addEventListener('change', e => { state.style = e.target.value; toggleEventCount(); renderSummary(); });
+    // 스타일 변경 시: 타임라인이면 이벤트 개수 노출 + 축 2배 크기 옵션 제공
+    function onStyleChange() {
+      const s = state.style;
+      const isTimeline = s.includes('타임라인');
+      eventCountField.style.display = isTimeline ? 'flex' : 'none';
+      if (s === '가로형 타임라인') {
+        setSizeOptions([['1536×1024', '1536 × 1024 (가로 넓게)'], ['2048×1024', '2048 × 1024 (가로 2배)']], '2048×1024');
+      } else if (s === '세로형 타임라인') {
+        setSizeOptions([['1024×1536', '1024 × 1536 (세로 길게)'], ['1024×2048', '1024 × 2048 (세로 2배)']], '1024×2048');
+      } else {
+        const keep = DEFAULT_SIZES.some(p => p[0] === state.imageSize) ? state.imageSize : '1024×1024';
+        setSizeOptions(DEFAULT_SIZES, keep);
+      }
+      renderSummary();
+    }
+    el.style.addEventListener('change', e => { state.style = e.target.value; onStyleChange(); });
     eventCountEl.addEventListener('input', e => {
       state.eventCount = parseInt(e.target.value);
       ecVal.textContent = state.eventCount;
@@ -927,7 +949,7 @@
       state.eventCount = 15;
       eventCountEl.value = 15;
       ecVal.textContent = '15';
-      toggleEventCount();
+      onStyleChange();
       state.videoRatio = '16:9';
       state.videoDuration = '5초';
       state.videoCount = 10;
@@ -1111,7 +1133,7 @@ Style: premium historical infographic, highly detailed, balanced layout, print-r
       const n = count || 15;
       return `A clean modern VERTICAL TIMELINE infographic poster about "${topic}", laid out with Korean text, portrait orientation.
 A single vertical spine line runs down the center from top to bottom; exactly ${n} chronological milestone nodes are placed along it, alternating left and right.
-Each milestone: a circular node with a small line icon on the spine, a bold year/date label, a short Korean heading, and 1-2 lines of Korean description inside a rounded card with a soft shadow.
+Each milestone: a circular node on the spine with a LARGE, BOLD YEAR/DATE number rendered prominently right on the spine as the most eye-catching text (much bigger than body text), plus a short Korean heading and 1-2 lines of Korean description inside a rounded card with a soft shadow.
 Top: a title block with the topic name and a short subtitle. Consistent accent color, generous whitespace, flat vector illustration style, subtle connecting lines from nodes to cards.
 Typography: clean Korean sans-serif headings, tabular date figures. Style: premium editorial infographic, high detail, balanced, print-ready, 4k.`;
     }
@@ -1120,7 +1142,7 @@ Typography: clean Korean sans-serif headings, tabular date figures. Style: premi
       const n = count || 15;
       return `A clean modern HORIZONTAL TIMELINE infographic poster about "${topic}", laid out with Korean text, landscape orientation.
 A single horizontal timeline line runs left to right across the middle; exactly ${n} chronological milestone nodes are spaced along it, with cards alternating above and below the line.
-Each milestone: a circular node with a small line icon on the line, a bold year/date label, a short Korean heading, and 1-2 lines of Korean description inside a rounded card with a soft shadow and a thin connector to the line.
+Each milestone: a circular node on the line with a LARGE, BOLD YEAR/DATE number rendered prominently right on the line as the most eye-catching text (much bigger than body text), plus a short Korean heading and 1-2 lines of Korean description inside a rounded card with a soft shadow and a thin connector to the line.
 Left or top: a title block with the topic name and subtitle. Consistent accent color, generous whitespace, flat vector illustration style.
 Typography: clean Korean sans-serif headings, tabular date figures. Style: premium editorial infographic, high detail, balanced, print-ready, 4k.`;
     }
