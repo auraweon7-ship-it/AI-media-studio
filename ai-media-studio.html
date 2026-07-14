@@ -606,7 +606,7 @@
     <div class="brand">
       <div class="logo">✦</div>
       <div>
-        <h1>AI 미디어 스튜디오 <span class="ver">v1.4</span></h1>
+        <h1>AI 미디어 스튜디오 <span class="ver">v1.5</span></h1>
         <span class="sub">이미지 · 영상 생성 워크스페이스</span>
       </div>
     </div>
@@ -1412,15 +1412,16 @@ Typography: clean Korean sans-serif headings, tabular date figures. Style: premi
       return [1280, 720]; // 16:9 기본
     }
 
-    // 최종 영상 파일명: "주제_YYYYMMDD_HHmmss.mp4"
-    function finalFilename() {
+    // 파일명: "주제_YYYYMMDD_HHmmss.<확장자>"
+    function stampName(ext) {
       const now = new Date();
       const p = n => String(n).padStart(2, '0');
       const stamp = `${now.getFullYear()}${p(now.getMonth() + 1)}${p(now.getDate())}_${p(now.getHours())}${p(now.getMinutes())}${p(now.getSeconds())}`;
       const subj = (state.subject.trim() || '무제')
         .replace(/[\\/:*?"<>|]+/g, '').replace(/\s+/g, '_').slice(0, 40);
-      return `${subj}_${stamp}.mp4`;
+      return `${subj}_${stamp}.${ext}`;
     }
+    function finalFilename() { return stampName('mp4'); }
 
     // 재생 시간(targetSec) 기준으로 클립을 이어붙이고 내레이션(선택)을 얹어 최종 webm 생성 → blob URL 반환
     async function buildFinalVideo(videoList, audioUrl, targetSec, statusEl, outEl) {
@@ -1776,7 +1777,7 @@ Typography: clean Korean sans-serif headings, tabular date figures. Style: premi
           // 응답 형식이 b64_json 또는 url 로 올 수 있어 둘 다 처리
           const item = data.data[0];
           const src = item.b64_json ? `data:image/png;base64,${item.b64_json}` : item.url;
-          const filename = `image_${Date.now()}.png`;
+          const filename = stampName('png');
           resultArea.innerHTML = `
             <div class="result-media"><div class="media-card">
               <div class="mc-head">
