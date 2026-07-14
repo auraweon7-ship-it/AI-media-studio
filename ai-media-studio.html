@@ -606,7 +606,7 @@
     <div class="brand">
       <div class="logo">✦</div>
       <div>
-        <h1>AI 미디어 스튜디오 <span class="ver">v1.3</span></h1>
+        <h1>AI 미디어 스튜디오 <span class="ver">v1.4</span></h1>
         <span class="sub">이미지 · 영상 생성 워크스페이스</span>
       </div>
     </div>
@@ -1167,7 +1167,7 @@ Typography: clean Korean sans-serif headings, tabular date figures. Style: premi
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'claude-3-5-sonnet-20241022',
+          model: 'claude-sonnet-5',
           max_tokens: maxTokens,
           system: sys,
           messages: [{ role: 'user', content: userMsg }]
