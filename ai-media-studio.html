@@ -1,0 +1,1880 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 미디어 스튜디오</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ══ Stripe 디자인 시스템 · 라이트(기본) ══ */
+  :root {
+    --accent: #635BFF;        /* Stripe 시그니처 퍼플 */
+    --accent-2: #8b6cff;      /* 그라디언트 파트너 */
+    --accent-deep: #4434d4;
+    --accent-press: #2e2b8c;
+    --accent-soft: #efeefe;   /* 옅은 퍼플 배경 */
+
+    --bg: #f5f7fc;            /* 페이지 배경 */
+    --surface: #ffffff;       /* 카드 표면 */
+    --surface-2: #f6f9fc;     /* 중첩 표면/입력 */
+    --border: #e3e8ee;        /* 헤어라인 */
+    --border-input: #dfe3ec;
+
+    --text: #0d253d;          /* 잉크(딥 네이비) */
+    --text-dim: #64748d;      /* 뮤트 */
+
+    --ok: #0e9f6e;
+    --warn: #b7791f;
+    --err: #e02424;
+
+    --radius: 14px;
+    --radius-sm: 8px;
+    --gap: 20px;
+
+    --shadow-1: 0 1px 3px rgba(60,66,87,.08), 0 1px 2px rgba(0,0,0,.04);
+    --shadow-2: 0 8px 24px rgba(60,66,87,.10), 0 2px 6px rgba(60,66,87,.05);
+    --shadow-accent: 0 4px 14px rgba(99,91,255,.32);
+  }
+
+  /* ══ 다크 ══ */
+  :root[data-theme="dark"] {
+    --accent: #7c74ff;
+    --accent-2: #a78bff;
+    --accent-deep: #635BFF;
+    --accent-press: #4434d4;
+    --accent-soft: #23255a;
+
+    --bg: #0a1130;
+    --surface: #141b3c;
+    --surface-2: #1c2447;
+    --border: #2b3566;
+    --border-input: #333f70;
+
+    --text: #eef1fb;
+    --text-dim: #9aa6cf;
+
+    --shadow-1: 0 1px 3px rgba(0,0,0,.4);
+    --shadow-2: 0 10px 30px rgba(0,0,0,.45), 0 2px 8px rgba(0,0,0,.3);
+    --shadow-accent: 0 4px 18px rgba(124,116,255,.4);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: "Inter", "SF Pro Display", system-ui, -apple-system, "Malgun Gothic", sans-serif;
+    font-weight: 300;
+    font-feature-settings: "ss01";
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    transition: background .3s ease, color .3s ease;
+  }
+
+  /* 그라디언트 메시 — 상단 대기감 (Stripe 시그니처) */
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 460px;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(circle at 12% 8%, rgba(99,91,255,.30), transparent 45%),
+      radial-gradient(circle at 48% -5%, rgba(160,124,255,.24), transparent 52%),
+      radial-gradient(circle at 82% 12%, rgba(234,34,97,.13), transparent 46%),
+      radial-gradient(circle at 68% 4%, rgba(245,233,212,.30), transparent 42%);
+    filter: blur(36px);
+    opacity: .95;
+    transition: opacity .3s ease;
+  }
+  :root[data-theme="dark"] body::before {
+    opacity: .55;
+    background:
+      radial-gradient(circle at 12% 8%, rgba(124,116,255,.35), transparent 46%),
+      radial-gradient(circle at 50% -5%, rgba(160,124,255,.22), transparent 52%),
+      radial-gradient(circle at 84% 12%, rgba(234,34,97,.16), transparent 46%);
+  }
+
+  /* ── 헤더 ── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 28px;
+    border-bottom: 1px solid var(--border);
+    background: color-mix(in srgb, var(--surface) 82%, transparent);
+    backdrop-filter: saturate(180%) blur(12px);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .brand { display: flex; align-items: center; gap: 14px; }
+  .brand .logo {
+    width: 40px; height: 40px;
+    border-radius: 11px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: grid; place-items: center;
+    font-size: 20px; color: #fff;
+    box-shadow: var(--shadow-accent);
+  }
+  .brand h1 {
+    font-size: 20px;
+    font-weight: 400;
+    letter-spacing: -0.4px;
+    color: var(--text);
+  }
+  .brand span.sub {
+    display: block;
+    font-size: 12px;
+    font-weight: 300;
+    color: var(--text-dim);
+    letter-spacing: -0.1px;
+  }
+  .header-actions { display: flex; align-items: center; gap: 10px; }
+  .icon-btn {
+    width: 42px; height: 42px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    border-radius: 11px;
+    cursor: pointer;
+    font-size: 18px;
+    display: grid; place-items: center;
+    transition: background .2s, border-color .2s, transform .2s, box-shadow .2s;
+  }
+  .icon-btn:hover {
+    border-color: var(--accent);
+    box-shadow: var(--shadow-1);
+    transform: translateY(-1px);
+  }
+
+  /* ── 레이아웃 ── */
+  main {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 44px 28px 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+  section { animation: fadeIn .5s ease both; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  .section-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-dim);
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+  }
+  .section-title::before {
+    content: "";
+    width: 4px; height: 13px;
+    border-radius: 2px;
+    background: linear-gradient(var(--accent), var(--accent-2));
+  }
+
+  /* ── 모드 선택 카드 ── */
+  .mode-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--gap);
+  }
+  .mode-card {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 28px;
+    cursor: pointer;
+    transition: border-color .25s, transform .25s, box-shadow .25s, background .25s;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: var(--shadow-1);
+  }
+  .mode-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-2); }
+  .mode-card.active {
+    border-color: var(--accent);
+    background: linear-gradient(180deg, var(--accent-soft), var(--surface));
+    box-shadow: var(--shadow-2);
+  }
+  .mode-card .mc-icon {
+    width: 56px; height: 56px;
+    border-radius: 14px;
+    background: var(--surface-2);
+    display: grid; place-items: center;
+    font-size: 27px;
+    flex-shrink: 0;
+    transition: background .25s, box-shadow .25s;
+  }
+  .mode-card.active .mc-icon {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    box-shadow: var(--shadow-accent);
+  }
+  .mode-card h3 { font-size: 20px; font-weight: 400; letter-spacing: -0.3px; }
+  .mode-card p { font-size: 14px; font-weight: 300; color: var(--text-dim); margin-top: 3px; }
+
+  /* ── 패널 공통 카드 ── */
+  .card {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 30px;
+    box-shadow: var(--shadow-1);
+  }
+
+  /* ── 옵션 패널 ── */
+  .option-panel { display: none; }
+  .option-panel.active { display: block; animation: fadeIn .35s ease both; }
+
+  .field-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+  .field { display: flex; flex-direction: column; gap: 7px; }
+  .field.full { grid-column: 1 / -1; }
+  .field label { font-size: 13px; font-weight: 400; color: var(--text-dim); }
+  .field input, .field select, .field textarea {
+    background: var(--surface);
+    border: 1px solid var(--border-input);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    padding: 11px 13px;
+    font-size: 15px;
+    font-weight: 300;
+    font-family: inherit;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .field input::placeholder, .field textarea::placeholder { color: var(--text-dim); opacity: .7; }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+  .field textarea { resize: vertical; min-height: 88px; line-height: 1.6; }
+
+  /* ── 체크박스 라벨 ── */
+  .check-label { display: flex; align-items: center; gap: 9px; cursor: pointer; font-size: 14px; font-weight: 300; color: var(--text); }
+  .check-label input { width: 17px; height: 17px; accent-color: var(--accent); cursor: pointer; }
+
+  /* ── 선택 요약 ── */
+  .summary {
+    margin-top: 22px;
+    padding: 15px 18px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 300;
+    color: var(--text-dim);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+  }
+  .summary b { color: var(--text); font-weight: 500; font-feature-settings: "tnum"; }
+  .summary .sum-item { display: flex; gap: 6px; }
+
+  /* ── 프롬프트 스튜디오 ── */
+  .prompt-studio { margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border); }
+  .ps-head {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px; margin-bottom: 16px;
+  }
+  .ps-head .ps-title { font-size: 15px; font-weight: 400; letter-spacing: -0.2px; }
+  .engine-toggle {
+    display: inline-flex;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 9999px;
+    padding: 4px;
+    gap: 4px;
+  }
+  .engine-toggle button {
+    border: none; background: transparent;
+    color: var(--text-dim);
+    padding: 8px 18px;
+    border-radius: 9999px;
+    font-size: 14px; font-weight: 400;
+    cursor: pointer; font-family: inherit;
+    transition: background .2s, color .2s, box-shadow .2s;
+  }
+  .engine-toggle button.active {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #fff;
+    box-shadow: var(--shadow-accent);
+  }
+  .engine-toggle button:disabled { opacity: .4; cursor: not-allowed; }
+
+  .ps-output { display: flex; flex-direction: column; gap: 16px; margin-top: 16px; }
+  .ps-block { display: flex; flex-direction: column; gap: 7px; }
+  .ps-block-head { display: flex; align-items: center; justify-content: space-between; }
+  .ps-block-head label { font-size: 13px; font-weight: 400; color: var(--text-dim); }
+  .ps-output textarea {
+    background: var(--surface);
+    border: 1px solid var(--border-input);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    padding: 13px;
+    font-size: 15px; font-weight: 300;
+    font-family: inherit; line-height: 1.6;
+    resize: vertical; min-height: 100px; outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .ps-output textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+  .copy-btn {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-dim);
+    border-radius: 9999px;
+    padding: 5px 14px;
+    font-size: 12px; font-weight: 400;
+    cursor: pointer; font-family: inherit;
+    transition: border-color .2s, color .2s;
+  }
+  .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── 알림 ── */
+  .notice {
+    font-size: 14px; font-weight: 300;
+    padding: 11px 15px; border-radius: var(--radius-sm);
+    margin-top: 12px; display: none;
+  }
+  .notice.warn { display: block; background: color-mix(in srgb, var(--warn) 12%, var(--surface)); border: 1px solid color-mix(in srgb, var(--warn) 40%, transparent); color: var(--warn); }
+  .notice.err  { display: block; background: color-mix(in srgb, var(--err) 10%, var(--surface));  border: 1px solid color-mix(in srgb, var(--err) 38%, transparent);  color: var(--err); }
+  .notice.ok   { display: block; background: color-mix(in srgb, var(--ok) 10%, var(--surface));   border: 1px solid color-mix(in srgb, var(--ok) 38%, transparent);   color: var(--ok); }
+
+  /* ── 버튼 ── */
+  .btn {
+    border: 1px solid var(--border-input);
+    background: var(--surface);
+    color: var(--text);
+    border-radius: 9999px;
+    padding: 11px 22px;
+    font-size: 15px; font-weight: 400;
+    cursor: pointer; font-family: inherit;
+    transition: border-color .2s, color .2s, transform .15s, box-shadow .2s, background .2s;
+  }
+  .btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+  .btn.primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    border: none; color: #fff;
+    box-shadow: var(--shadow-accent);
+  }
+  .btn.primary:hover { color: #fff; filter: brightness(1.06); transform: translateY(-1px); }
+  .btn.primary:active { transform: translateY(0); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+  .btn.primary:disabled { filter: grayscale(.5); box-shadow: none; }
+
+  .panel-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+
+  /* ── 결과 표시 영역 ── */
+  .result-area {
+    min-height: 280px;
+    display: grid; place-items: center;
+    border: 1px dashed var(--border);
+    background: var(--surface);
+    border-radius: var(--radius);
+    color: var(--text-dim);
+    text-align: center;
+    padding: 44px 24px;
+    box-shadow: var(--shadow-1);
+  }
+  .result-area .ph-icon { font-size: 42px; opacity: .55; margin-bottom: 12px; }
+  .result-area .ph-text { font-size: 15px; font-weight: 300; }
+
+  /* ── 로딩 스피너 ── */
+  .spinner {
+    width: 40px; height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+    margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .progress-text { font-size: 15px; font-weight: 300; color: var(--text-dim); }
+
+  /* ── 결과 미디어 ── */
+  .result-media { width: 100%; display: flex; flex-direction: column; gap: 18px; }
+  .media-card {
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow-1);
+  }
+  .media-card .mc-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px; gap: 10px; flex-wrap: wrap;
+  }
+  .media-card .mc-head .mc-tag {
+    font-size: 13px; font-weight: 400; color: var(--text-dim);
+    display: flex; align-items: center; gap: 6px;
+    font-feature-settings: "tnum";
+  }
+  .media-card img, .media-card video {
+    width: 100%; border-radius: var(--radius-sm); display: block; background: #000;
+    max-height: 440px; object-fit: contain;
+  }
+  .media-card audio { width: 100%; margin-top: 4px; }
+  .dl-btn {
+    border: 1px solid var(--border-input);
+    background: var(--surface);
+    color: var(--text);
+    border-radius: 9999px;
+    padding: 8px 16px;
+    font-size: 13px; font-weight: 400;
+    cursor: pointer; font-family: inherit;
+    display: inline-flex; align-items: center; gap: 6px;
+    transition: border-color .2s, color .2s;
+  }
+  .dl-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .result-error {
+    background: color-mix(in srgb, var(--err) 10%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--err) 38%, transparent);
+    color: var(--err);
+    padding: 18px 20px; border-radius: var(--radius);
+    font-size: 15px; font-weight: 300; text-align: center; max-width: 500px;
+  }
+
+  /* ── 영상 미리보기 5열 그리드 ── */
+  .video-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+  }
+  .video-cell {
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    box-shadow: var(--shadow-1);
+    display: flex;
+    flex-direction: column;
+    transition: transform .2s, box-shadow .2s;
+  }
+  .video-cell:hover { transform: translateY(-2px); box-shadow: var(--shadow-2); }
+  .video-cell video {
+    width: 100%; aspect-ratio: 16 / 9; object-fit: cover; background: #000; display: block;
+  }
+  .video-cell .vc-foot {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 7px 9px; gap: 6px;
+  }
+  .video-cell .vc-meta { font-size: 11px; font-weight: 400; color: var(--text-dim); font-feature-settings: "tnum"; }
+  .video-cell .vc-dl {
+    border: 1px solid var(--border-input); background: var(--surface);
+    color: var(--text); border-radius: 9999px; padding: 3px 10px;
+    font-size: 11px; font-weight: 400; cursor: pointer; font-family: inherit;
+    transition: border-color .2s, color .2s;
+  }
+  .video-cell .vc-dl:hover { border-color: var(--accent); color: var(--accent); }
+  @media (max-width: 900px) { .video-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 560px) { .video-grid { grid-template-columns: repeat(2, 1fr); } }
+
+  /* ── 갤러리 영역 ── */
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(158px, 1fr));
+    gap: 16px;
+  }
+  .gallery-item {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    border-radius: var(--radius);
+    display: grid; place-items: center;
+    color: var(--text-dim);
+    font-size: 24px;
+    overflow: hidden;
+    box-shadow: var(--shadow-1);
+    transition: transform .25s, box-shadow .25s;
+  }
+  .gallery-item:hover { transform: translateY(-3px); box-shadow: var(--shadow-2); }
+  .gallery-item img, .gallery-item video { width: 100%; height: 100%; object-fit: cover; }
+  .gallery-item .gi-badge {
+    position: absolute; top: 8px; left: 8px;
+    background: rgba(13,37,61,.72); color: #fff;
+    font-size: 11px; font-weight: 400; padding: 3px 9px; border-radius: 9999px;
+    backdrop-filter: blur(4px);
+  }
+  .gallery-item .gi-dl {
+    position: absolute; bottom: 8px; right: 8px;
+    background: rgba(13,37,61,.72); color: #fff;
+    border: none; border-radius: 9999px; cursor: pointer;
+    font-size: 12px; font-weight: 400; padding: 4px 11px; font-family: inherit;
+    backdrop-filter: blur(4px);
+    transition: background .2s;
+  }
+  .gallery-item .gi-dl:hover { background: var(--accent); }
+
+  /* ── 모달 ── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(13,37,61,.5);
+    backdrop-filter: blur(4px);
+    display: none; align-items: center; justify-content: center;
+    padding: 20px; z-index: 100;
+  }
+  .modal-overlay.open { display: flex; animation: fadeIn .25s ease both; }
+  .modal {
+    width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 30px;
+    box-shadow: var(--shadow-2);
+  }
+  .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .modal-head h2 { font-size: 22px; font-weight: 300; letter-spacing: -0.4px; }
+  .modal-head .close-x {
+    width: 34px; height: 34px; border-radius: 9999px;
+    border: 1px solid var(--border); background: var(--surface);
+    color: var(--text); cursor: pointer; font-size: 15px;
+    transition: border-color .2s, color .2s;
+  }
+  .modal-head .close-x:hover { border-color: var(--accent); color: var(--accent); }
+  .modal-desc { font-size: 13px; font-weight: 300; color: var(--text-dim); margin-bottom: 22px; line-height: 1.6; }
+
+  .key-row { margin-bottom: 18px; }
+  .key-row > label { font-size: 14px; font-weight: 400; display: block; margin-bottom: 7px; }
+  .key-input-line { display: flex; gap: 8px; align-items: center; }
+  .key-input-line input {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border-input);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    padding: 11px 13px;
+    font-size: 15px; font-weight: 300; font-family: inherit; outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .key-input-line input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+  .test-btn {
+    border: 1px solid var(--border-input);
+    background: var(--surface);
+    color: var(--text);
+    border-radius: 9999px;
+    padding: 10px 15px;
+    font-size: 13px; font-weight: 400;
+    white-space: nowrap; cursor: pointer; font-family: inherit;
+    transition: border-color .2s, color .2s;
+  }
+  .test-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .test-btn:disabled { opacity: .4; cursor: not-allowed; }
+  .status-icon { width: 24px; text-align: center; font-size: 16px; flex-shrink: 0; }
+  .status-icon.ok { color: var(--ok); }
+  .status-icon.fail { color: var(--err); }
+  .status-icon.loading { color: var(--text-dim); }
+
+  /* ── 반응형 ── */
+  @media (max-width: 640px) {
+    .mode-grid { grid-template-columns: 1fr; }
+    .field-grid { grid-template-columns: 1fr; }
+    main { padding: 32px 18px 60px; gap: 32px; }
+    header { padding: 16px 18px; }
+    .brand h1 { font-size: 18px; }
+    .card { padding: 22px; }
+  }
+</style>
+</head>
+<body>
+  <!-- 헤더 -->
+  <header>
+    <div class="brand">
+      <div class="logo">✦</div>
+      <div>
+        <h1>AI 미디어 스튜디오</h1>
+        <span class="sub">이미지 · 영상 생성 워크스페이스</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" id="themeToggle" title="라이트/다크 전환" aria-label="테마 전환">🌙</button>
+      <button class="icon-btn" id="settingsBtn" title="설정" aria-label="설정">⚙</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- 모드 선택 영역 -->
+    <section>
+      <div class="section-title">모드 선택</div>
+      <div class="mode-grid">
+        <div class="mode-card active" data-mode="image">
+          <div class="mc-icon">🖼️</div>
+          <div>
+            <h3>이미지</h3>
+            <p>텍스트로 이미지를 생성합니다</p>
+          </div>
+        </div>
+        <div class="mode-card" data-mode="video">
+          <div class="mc-icon">🎬</div>
+          <div>
+            <h3>영상</h3>
+            <p>텍스트·이미지로 영상을 생성합니다</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 옵션 패널 영역 -->
+    <section>
+      <div class="section-title">옵션 설정</div>
+
+      <div class="card">
+        <!-- 공통 옵션 -->
+        <div class="field-grid">
+          <div class="field full">
+            <label>주제</label>
+            <input type="text" id="opt-subject" placeholder="생성할 내용의 주제를 입력하세요 (예: 노을 지는 해변)">
+          </div>
+          <div class="field full">
+            <label>스타일</label>
+            <select id="opt-style">
+              <option value="사실적 사진">사실적 사진</option>
+              <option value="일러스트">일러스트</option>
+              <option value="3D 렌더링">3D 렌더링</option>
+              <option value="수채화">수채화</option>
+              <option value="애니메이션">애니메이션</option>
+              <option value="미니멀">미니멀</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 이미지 전용 옵션 -->
+        <div class="option-panel active" data-panel="image">
+          <div class="field-grid" style="margin-top:16px;">
+            <div class="field full">
+              <label>크기</label>
+              <select id="opt-image-size">
+                <option value="1024×1024">1024 × 1024 (정사각형)</option>
+                <option value="1536×1024">1536 × 1024 (가로)</option>
+                <option value="1024×1536">1024 × 1536 (세로)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 영상 전용 옵션 -->
+        <div class="option-panel" data-panel="video">
+          <div class="field-grid" style="margin-top:16px;">
+            <div class="field">
+              <label>비율</label>
+              <select id="opt-video-ratio">
+                <option value="16:9">16:9 (가로)</option>
+                <option value="9:16">9:16 (세로)</option>
+                <option value="1:1">1:1 (정사각형)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>재생 시간</label>
+              <select id="opt-video-duration">
+                <option value="5초">5초</option>
+                <option value="10초">10초</option>
+                <option value="15초">15초</option>
+                <option value="30초">30초</option>
+                <option value="1분">1분</option>
+                <option value="2분">2분</option>
+                <option value="3분">3분</option>
+              </select>
+            </div>
+            <div class="field full">
+              <label>영상 개수 · <span id="vcVal">10</span>개</label>
+              <input type="range" id="opt-video-count" min="10" max="30" step="1" value="10">
+            </div>
+            <div class="field full">
+              <label class="check-label">
+                <input type="checkbox" id="opt-narration">
+                <span>ElevenLabs로 주제에 맞는 내레이션 오디오 생성</span>
+              </label>
+            </div>
+            <div class="field full">
+              <div class="ps-head" style="margin-bottom:10px;">
+                <span class="ps-title">대본 · 영상 개수에 맞춰 장면 기획</span>
+                <button class="copy-btn" data-copy="scriptOut">복사</button>
+              </div>
+              <button class="btn primary" id="genScriptBtn" style="width:100%;">대본 생성</button>
+              <div class="notice" id="scriptNotice"></div>
+              <textarea id="scriptOut" style="margin-top:12px;display:none;min-height:180px;" placeholder="영상 개수만큼의 장면 대본이 여기에 표시됩니다"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- 선택 요약 -->
+        <div class="summary" id="optSummary"></div>
+
+        <!-- 프롬프트 스튜디오 -->
+        <div class="prompt-studio">
+          <div class="ps-head">
+            <span class="ps-title">프롬프트 생성 엔진</span>
+            <div class="engine-toggle" id="engineToggle">
+              <button data-engine="openai" class="active">ChatGPT</button>
+              <button data-engine="anthropic">Claude</button>
+            </div>
+          </div>
+
+          <button class="btn primary" id="genPromptBtn" style="width:100%;">프롬프트 생성</button>
+          <div class="notice" id="promptNotice"></div>
+
+          <div class="ps-output" id="psOutput" style="display:none;">
+            <div class="ps-block">
+              <div class="ps-block-head">
+                <label>영문 생성 프롬프트 (편집 가능)</label>
+                <button class="copy-btn" data-copy="ps-en">복사</button>
+              </div>
+              <textarea id="ps-en" placeholder="생성된 영문 프롬프트가 여기에 표시됩니다"></textarea>
+            </div>
+            <div class="ps-block">
+              <div class="ps-block-head">
+                <label>한국어 번역 (편집 가능)</label>
+                <button class="copy-btn" data-copy="ps-ko">복사</button>
+              </div>
+              <textarea id="ps-ko" placeholder="한국어 번역이 여기에 표시됩니다"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-actions">
+          <button class="btn" id="resetBtn">초기화</button>
+          <button class="btn primary" id="generateBtn">제작하기</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 결과 표시 영역 -->
+    <section>
+      <div class="section-title">결과</div>
+      <div class="result-area" id="resultArea">
+        <div>
+          <div class="ph-icon">✨</div>
+          <div class="ph-text">아직 생성된 결과가 없습니다. 옵션을 설정하고 생성하기를 눌러보세요.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 갤러리 영역 -->
+    <section>
+      <div class="section-title">갤러리</div>
+      <div class="card">
+        <div class="gallery-empty" id="galleryEmpty" style="color:var(--text-dim);font-size:14px;font-weight:300;text-align:center;padding:28px;">
+          제작한 결과가 여기에 누적됩니다.
+        </div>
+        <div class="gallery-grid" id="galleryGrid" style="display:none;"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 설정 모달 -->
+  <div class="modal-overlay" id="settingsModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h2>설정 · API 키</h2>
+        <button class="close-x" id="closeModal" aria-label="닫기">✕</button>
+      </div>
+      <p class="modal-desc">키는 이 브라우저(localStorage)에 저장되어 새로고침 후에도 유지됩니다. ⚠️ 평문으로 저장되므로 공용·공유 PC에서는 사용하지 마세요. 외부로 전송되지 않습니다.</p>
+
+      <div class="key-row">
+        <label>OpenAI (ChatGPT)</label>
+        <div class="key-input-line">
+          <input type="password" data-key="openai" placeholder="sk-...">
+          <button class="test-btn" data-test="openai">연결 테스트</button>
+          <span class="status-icon" data-status="openai"></span>
+        </div>
+      </div>
+
+      <div class="key-row">
+        <label>Anthropic (Claude)</label>
+        <div class="key-input-line">
+          <input type="password" data-key="anthropic" placeholder="sk-ant-...">
+          <button class="test-btn" data-test="anthropic">연결 테스트</button>
+          <span class="status-icon" data-status="anthropic"></span>
+        </div>
+      </div>
+
+      <div class="key-row">
+        <label>ElevenLabs</label>
+        <div class="key-input-line">
+          <input type="password" data-key="elevenlabs" placeholder="xi-api-key">
+          <button class="test-btn" data-test="elevenlabs">연결 테스트</button>
+          <span class="status-icon" data-status="elevenlabs"></span>
+        </div>
+      </div>
+
+      <div class="key-row">
+        <label>Pexels</label>
+        <div class="key-input-line">
+          <input type="password" data-key="pexels" placeholder="API 키">
+          <button class="test-btn" data-test="pexels">연결 테스트</button>
+          <span class="status-icon" data-status="pexels"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ── 선택 상태 (자바스크립트 변수로 관리) ──
+    const state = {
+      mode: 'image',           // 'image' | 'video'
+      subject: '',             // 공통: 주제
+      style: '사실적 사진',     // 공통: 스타일
+      imageSize: '1024×1024',  // 이미지: 크기
+      videoRatio: '16:9',      // 영상: 비율
+      videoDuration: '5초',    // 영상: 재생 시간
+      videoCount: 10,          // 영상: 다운로드 개수 (10~30)
+      narration: false         // 영상: 내레이션 생성 여부
+    };
+
+    // ── DOM 참조 ──
+    const cards = document.querySelectorAll('.mode-card');
+    const panels = document.querySelectorAll('.option-panel');
+    const el = {
+      subject: document.getElementById('opt-subject'),
+      style: document.getElementById('opt-style'),
+      imageSize: document.getElementById('opt-image-size'),
+      videoRatio: document.getElementById('opt-video-ratio'),
+      videoDuration: document.getElementById('opt-video-duration'),
+      summary: document.getElementById('optSummary')
+    };
+
+    // ── 요약 실시간 렌더 ──
+    function renderSummary() {
+      const items = [
+        ['모드', state.mode === 'image' ? '이미지' : '영상'],
+        ['주제', state.subject.trim() || '(미입력)'],
+        ['스타일', state.style]
+      ];
+      if (state.mode === 'image') {
+        items.push(['크기', state.imageSize]);
+      } else {
+        items.push(['비율', state.videoRatio], ['재생 시간', state.videoDuration], ['영상 개수', state.videoCount + '개']);
+      }
+      el.summary.innerHTML = items
+        .map(([k, v]) => `<span class="sum-item"><span class="sum-label">${k}:</span> <b>${v}</b></span>`)
+        .join('');
+    }
+
+    // ── 모드 전환 ──
+    cards.forEach(card => {
+      card.addEventListener('click', () => {
+        state.mode = card.dataset.mode;
+        cards.forEach(c => c.classList.toggle('active', c === card));
+        panels.forEach(p => p.classList.toggle('active', p.dataset.panel === state.mode));
+        renderSummary();
+      });
+    });
+
+    // ── 입력 → 상태 동기화 ──
+    el.subject.addEventListener('input', e => { state.subject = e.target.value; renderSummary(); });
+    el.style.addEventListener('change', e => { state.style = e.target.value; renderSummary(); });
+    el.imageSize.addEventListener('change', e => { state.imageSize = e.target.value; renderSummary(); });
+    el.videoRatio.addEventListener('change', e => { state.videoRatio = e.target.value; renderSummary(); });
+    el.videoDuration.addEventListener('change', e => { state.videoDuration = e.target.value; renderSummary(); });
+    const videoCountEl = document.getElementById('opt-video-count');
+    const vcVal = document.getElementById('vcVal');
+    videoCountEl.addEventListener('input', e => {
+      state.videoCount = parseInt(e.target.value);
+      vcVal.textContent = state.videoCount;
+      renderSummary();
+    });
+
+    // ── 초기화 ──
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      state.subject = '';
+      state.style = '사실적 사진';
+      state.imageSize = '1024×1024';
+      state.videoRatio = '16:9';
+      state.videoDuration = '5초';
+      state.videoCount = 10;
+      state.narration = false;
+      document.getElementById('opt-narration').checked = false;
+      videoCountEl.value = 10;
+      vcVal.textContent = '10';
+      const so = document.getElementById('scriptOut');
+      so.value = ''; so.style.display = 'none';
+      scriptScenes = [];
+      document.getElementById('scriptNotice').className = 'notice';
+      el.subject.value = '';
+      el.style.value = state.style;
+      el.imageSize.value = state.imageSize;
+      el.videoRatio.value = state.videoRatio;
+      el.videoDuration.value = state.videoDuration;
+      renderSummary();
+    });
+
+    // ── 테마 토글 (라이트/다크) ──
+    const THEME_STORAGE = 'aiMediaStudio.theme';
+    const themeToggle = document.getElementById('themeToggle');
+    function applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+      try { localStorage.setItem(THEME_STORAGE, theme); } catch { /* 저장 불가 시 무시 */ }
+    }
+    themeToggle.addEventListener('click', () => {
+      const cur = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+      applyTheme(cur === 'dark' ? 'light' : 'dark');
+    });
+
+    // ── API 키 (localStorage에 저장, 새로고침 후 유지) ──
+    const KEYS_STORAGE = 'aiMediaStudio.apiKeys';
+    const keys = { openai: '', anthropic: '', elevenlabs: '', pexels: '' };
+    let engine = 'openai'; // 프롬프트 생성 엔진: 'openai' | 'anthropic'
+
+    function saveKeys() {
+      try { localStorage.setItem(KEYS_STORAGE, JSON.stringify(keys)); } catch { /* 저장 불가 시 무시 */ }
+    }
+    function loadKeys() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(KEYS_STORAGE) || '{}');
+        Object.keys(keys).forEach(k => { if (typeof saved[k] === 'string') keys[k] = saved[k]; });
+      } catch { /* 파싱 실패 시 무시 */ }
+      // 입력란에 복원
+      document.querySelectorAll('input[data-key]').forEach(inp => {
+        inp.value = keys[inp.dataset.key] || '';
+      });
+    }
+
+    // ── 모달 열기/닫기 ──
+    const modal = document.getElementById('settingsModal');
+    document.getElementById('settingsBtn').addEventListener('click', () => modal.classList.add('open'));
+    document.getElementById('closeModal').addEventListener('click', () => modal.classList.remove('open'));
+    modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('open'); });
+
+    // ── 키 입력 → 메모리 동기화 ──
+    document.querySelectorAll('input[data-key]').forEach(inp => {
+      inp.addEventListener('input', e => {
+        keys[e.target.dataset.key] = e.target.value.trim();
+        saveKeys(); // 변경 즉시 localStorage에 반영
+        // 키 변경 시 상태 아이콘 초기화
+        document.querySelector(`[data-status="${e.target.dataset.key}"]`).className = 'status-icon';
+        refreshPromptAvailability();
+      });
+    });
+
+    // ── 상태 아이콘 설정 ──
+    function setStatus(provider, state) {
+      const icon = document.querySelector(`[data-status="${provider}"]`);
+      if (state === 'loading') { icon.className = 'status-icon loading'; icon.textContent = '⏳'; }
+      else if (state === 'ok') { icon.className = 'status-icon ok'; icon.textContent = '✓'; }
+      else if (state === 'fail') { icon.className = 'status-icon fail'; icon.textContent = '✕'; }
+      else { icon.className = 'status-icon'; icon.textContent = ''; }
+    }
+
+    // ── 연결 테스트 (실제 fetch) ──
+    async function testConnection(provider) {
+      const key = keys[provider];
+      if (!key) { setStatus(provider, 'fail'); return; }
+      setStatus(provider, 'loading');
+      try {
+        let res;
+        if (provider === 'openai') {
+          res = await fetch('https://api.openai.com/v1/models', {
+            headers: { 'Authorization': `Bearer ${key}` }
+          });
+        } else if (provider === 'anthropic') {
+          // 최소 요청으로 인증 확인 (400=인증OK/파라미터문제, 401=키오류)
+          res = await fetch('https://api.anthropic.com/v1/models', {
+            headers: {
+              'x-api-key': key,
+              'anthropic-version': '2023-06-01',
+              'anthropic-dangerous-direct-browser-access': 'true'
+            }
+          });
+        } else if (provider === 'elevenlabs') {
+          res = await fetch('https://api.elevenlabs.io/v1/user', {
+            headers: { 'xi-api-key': key }
+          });
+        } else if (provider === 'pexels') {
+          res = await fetch('https://api.pexels.com/v1/search?query=test&per_page=1', {
+            headers: { 'Authorization': key }
+          });
+        }
+        setStatus(provider, res && res.ok ? 'ok' : 'fail');
+      } catch (err) {
+        // CORS/네트워크 실패
+        setStatus(provider, 'fail');
+      }
+    }
+
+    document.querySelectorAll('.test-btn').forEach(btn => {
+      btn.addEventListener('click', () => testConnection(btn.dataset.test));
+    });
+
+    // ── 엔진 토글 ──
+    const engineToggle = document.getElementById('engineToggle');
+    engineToggle.querySelectorAll('button').forEach(b => {
+      b.addEventListener('click', () => {
+        if (b.disabled) return;
+        engine = b.dataset.engine;
+        engineToggle.querySelectorAll('button').forEach(x => x.classList.toggle('active', x === b));
+        refreshPromptAvailability();
+      });
+    });
+
+    // ── 프롬프트 기능 활성/비활성 ──
+    const genPromptBtn = document.getElementById('genPromptBtn');
+    const promptNotice = document.getElementById('promptNotice');
+    function refreshPromptAvailability() {
+      // 엔진 버튼: 해당 키 없으면 비활성
+      engineToggle.querySelectorAll('button').forEach(b => {
+        b.disabled = !keys[b.dataset.engine];
+      });
+      // 활성 엔진 키 없으면 사용 가능한 다른 엔진으로 자동 전환
+      if (!keys[engine]) {
+        const alt = engine === 'openai' ? 'anthropic' : 'openai';
+        if (keys[alt]) {
+          engine = alt;
+          engineToggle.querySelectorAll('button').forEach(x => x.classList.toggle('active', x.dataset.engine === alt));
+        }
+      }
+      const hasKey = !!keys[engine];
+      genPromptBtn.disabled = !hasKey;
+      if (!keys.openai && !keys.anthropic) {
+        promptNotice.className = 'notice warn';
+        promptNotice.textContent = '프롬프트 생성을 사용하려면 설정에서 OpenAI 또는 Anthropic API 키를 입력하세요.';
+      } else {
+        promptNotice.className = 'notice';
+        promptNotice.textContent = '';
+      }
+    }
+
+    // ── 프롬프트 생성 (선택 옵션 조합 → AI API 호출) ──
+    const psOutput = document.getElementById('psOutput');
+    const psEn = document.getElementById('ps-en');
+    const psKo = document.getElementById('ps-ko');
+
+    function buildInstruction() {
+      const parts = [
+        `대상 모드: ${state.mode === 'image' ? '이미지 생성' : '영상 생성'}`,
+        `주제: ${state.subject.trim() || '(미지정)'}`,
+        `스타일: ${state.style}`
+      ];
+      if (state.mode === 'image') parts.push(`크기: ${state.imageSize}`);
+      else parts.push(`비율: ${state.videoRatio}`, `재생 시간: ${state.videoDuration}`);
+      return parts.join(', ');
+    }
+
+    const DEFAULT_SYS = 'You are an expert prompt engineer for generative AI media. Reply with valid JSON only.';
+
+    async function callOpenAI(userMsg, sys = DEFAULT_SYS, maxTokens = 1024) {
+      const res = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${keys.openai}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          max_tokens: maxTokens,
+          messages: [
+            { role: 'system', content: sys },
+            { role: 'user', content: userMsg }
+          ],
+          temperature: 0.8
+        })
+      });
+      if (!res.ok) throw new Error(`OpenAI ${res.status}`);
+      const data = await res.json();
+      return data.choices[0].message.content;
+    }
+
+    async function callAnthropic(userMsg, sys = DEFAULT_SYS, maxTokens = 1024) {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': keys.anthropic,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'claude-3-5-sonnet-20241022',
+          max_tokens: maxTokens,
+          system: sys,
+          messages: [{ role: 'user', content: userMsg }]
+        })
+      });
+      if (!res.ok) throw new Error(`Anthropic ${res.status}`);
+      const data = await res.json();
+      return data.content[0].text;
+    }
+
+    function parseResult(raw) {
+      // JSON 코드펜스 제거 후 파싱
+      let t = raw.trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+      try {
+        const obj = JSON.parse(t);
+        return { english: obj.english || obj.prompt || '', korean: obj.korean || obj.translation || '' };
+      } catch {
+        // 파싱 실패 시 원문을 영문칸에 표시
+        return { english: raw.trim(), korean: '' };
+      }
+    }
+
+    genPromptBtn.addEventListener('click', async () => {
+      if (!keys[engine]) { refreshPromptAvailability(); return; }
+      const instruction = buildInstruction();
+      const userMsg =
+        `다음 조건으로 생성형 AI용 고품질 영문 프롬프트를 작성하라.\n조건: ${instruction}\n` +
+        `요구사항: 상세하고 구체적인 영문 프롬프트(조명/구도/디테일/분위기 포함)와 그 한국어 번역을 제공.\n` +
+        `반드시 다음 JSON 형식으로만 응답: {"english": "...", "korean": "..."}`;
+
+      genPromptBtn.disabled = true;
+      const orig = genPromptBtn.textContent;
+      genPromptBtn.textContent = '생성 중…';
+      promptNotice.className = 'notice';
+      promptNotice.textContent = '';
+      try {
+        const raw = engine === 'openai' ? await callOpenAI(userMsg) : await callAnthropic(userMsg);
+        const { english, korean } = parseResult(raw);
+        psEn.value = english;
+        psKo.value = korean;
+        psOutput.style.display = 'flex';
+        promptNotice.className = 'notice ok';
+        promptNotice.textContent = '프롬프트 생성 완료. 아래 [제작하기]를 누르면 이 프롬프트로 ' +
+          (state.mode === 'image' ? '이미지를' : '영상을') + ' 제작합니다. (필요 시 프롬프트를 직접 수정 가능)';
+      } catch (err) {
+        promptNotice.className = 'notice err';
+        promptNotice.textContent = `프롬프트 생성 실패: ${err.message} (키·네트워크·CORS 확인)`;
+      } finally {
+        genPromptBtn.textContent = orig;
+        genPromptBtn.disabled = !keys[engine];
+      }
+    });
+
+    // ── 대본 생성 (영상 개수에 맞춰 장면 기획) ──
+    const genScriptBtn = document.getElementById('genScriptBtn');
+    const scriptOut = document.getElementById('scriptOut');
+    const scriptNotice = document.getElementById('scriptNotice');
+
+    let scriptScenes = []; // 마지막 생성 대본의 장면 배열 (나레이션 재사용)
+
+    function parseScriptRaw(raw) {
+      let t = raw.trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+      try {
+        const obj = JSON.parse(t);
+        return { title: obj.title || '', scenes: obj.scenes || obj.segments || [] };
+      } catch { return null; }
+    }
+    function formatScriptObj(obj, n) {
+      const lines = [];
+      if (obj.title) lines.push(`[제목] ${obj.title}`, '');
+      obj.scenes.forEach((s, i) => {
+        const num = s.n || s.scene || (i + 1);
+        lines.push(`── 장면 ${num} / ${n} ──`);
+        if (s.visual) lines.push(`🎬 영상: ${s.visual}`);
+        if (s.narration) lines.push(`🗣 내레이션: ${s.narration}`);
+        lines.push('');
+      });
+      return lines.join('\n').trim();
+    }
+    // 편집된 대본 텍스트에서 내레이션만 추출 (사용자가 직접 수정한 경우 대비)
+    function narrationFromScriptText() {
+      const txt = scriptOut.value || '';
+      const fromText = txt.split('\n')
+        .filter(l => l.includes('🗣'))
+        .map(l => l.replace(/.*🗣\s*(내레이션:)?\s*/, '').trim())
+        .filter(Boolean);
+      if (fromText.length) return fromText.join(' ');
+      return scriptScenes.map(s => s.narration).filter(Boolean).join(' ');
+    }
+
+    genScriptBtn.addEventListener('click', async () => {
+      if (!keys[engine]) {
+        scriptNotice.className = 'notice warn';
+        scriptNotice.textContent = '대본 생성을 사용하려면 설정에서 OpenAI 또는 Anthropic API 키를 입력하세요.';
+        return;
+      }
+      const n = state.videoCount;
+      const subject = state.subject.trim() || '(주제 미지정)';
+      const userMsg =
+        `주제 "${subject}"(스타일: ${state.style})로 ` +
+        `정확히 ${n}개의 장면으로 구성된 ${state.videoDuration} 분량의 영상 대본을 기획하라.\n` +
+        `각 장면은 (1) 스톡 영상 검색용 영어 비주얼 키워드 visual, (2) 한국어 내레이션 1~2문장 narration 을 포함한다.\n` +
+        `반드시 다음 JSON으로만 응답: {"title":"영상 제목","scenes":[{"n":1,"visual":"english keywords","narration":"한국어 내레이션"}]} — scenes 길이는 정확히 ${n}.`;
+
+      genScriptBtn.disabled = true;
+      const orig = genScriptBtn.textContent;
+      genScriptBtn.textContent = '기획 중…';
+      scriptNotice.className = 'notice';
+      scriptNotice.textContent = '';
+      try {
+        // 장면 수가 많으면 토큰도 늘림
+        const maxTokens = Math.min(4096, 400 + n * 120);
+        const raw = engine === 'openai'
+          ? await callOpenAI(userMsg, DEFAULT_SYS, maxTokens)
+          : await callAnthropic(userMsg, DEFAULT_SYS, maxTokens);
+        const obj = parseScriptRaw(raw);
+        if (obj && obj.scenes.length) {
+          scriptScenes = obj.scenes;
+          scriptOut.value = formatScriptObj(obj, n);
+        } else {
+          scriptScenes = [];
+          scriptOut.value = raw.trim();
+        }
+        scriptOut.style.display = 'block';
+        scriptNotice.className = 'notice ok';
+        scriptNotice.textContent = `${n}개 장면 대본 생성 완료. [제작하기] 시 이 대본으로 내레이션을 생성합니다. (직접 수정 가능)`;
+      } catch (err) {
+        scriptNotice.className = 'notice err';
+        scriptNotice.textContent = `대본 생성 실패: ${err.message} (키·네트워크·CORS 확인)`;
+      } finally {
+        genScriptBtn.textContent = orig;
+        genScriptBtn.disabled = !keys[engine];
+      }
+    });
+
+    // ── 복사 버튼 ──
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const ta = document.getElementById(btn.dataset.copy);
+        try {
+          await navigator.clipboard.writeText(ta.value);
+          const t = btn.textContent; btn.textContent = '복사됨 ✓';
+          setTimeout(() => btn.textContent = t, 1200);
+        } catch {
+          ta.select(); document.execCommand('copy');
+        }
+      });
+    });
+
+    // ── 내레이션 옵션 ──
+    document.getElementById('opt-narration').addEventListener('change', e => {
+      state.narration = e.target.checked;
+    });
+
+    // ── 결과/갤러리 헬퍼 ──
+    const resultArea = document.getElementById('resultArea');
+    const galleryGrid = document.getElementById('galleryGrid');
+    const galleryEmpty = document.getElementById('galleryEmpty');
+    const history = []; // 생성 이력 (메모리)
+
+    function showLoading(msg) {
+      resultArea.innerHTML = `<div><div class="spinner"></div><div class="progress-text">${msg}</div></div>`;
+    }
+    function showError(msg) {
+      resultArea.innerHTML = `<div class="result-error">⚠️ ${msg}</div>`;
+    }
+    // API 오류 응답 본문에서 실제 사유 추출 → "상태코드: 메시지"
+    async function apiErrorMessage(res) {
+      let detail = '';
+      try {
+        const body = await res.clone().json();
+        detail = body?.error?.message || body?.detail?.message || body?.detail || body?.message || '';
+      } catch {
+        try { detail = (await res.text()).slice(0, 300); } catch { /* noop */ }
+      }
+      return `${res.status}${detail ? ': ' + detail : ''}`;
+    }
+
+    // 사용자 친화적 오류 메시지 매핑
+    function friendlyError(err, provider) {
+      const m = (err && err.message) || '';
+      if (/content_policy|safety|content policy/i.test(m))
+        return `프롬프트가 ${provider} 콘텐츠 정책에 의해 거부되었습니다. 주제·표현을 바꿔 다시 시도하세요.`;
+      if (/billing_hard_limit|quota|insufficient|billing/i.test(m))
+        return `${provider} 사용 한도(크레딧/결제)가 부족합니다. 계정 결제 상태를 확인하세요.`;
+      if (/\b401\b|\b403\b|invalid.*api.*key|incorrect api key|authentication/i.test(m))
+        return `${provider} API 키가 올바르지 않거나 권한이 없습니다. 설정에서 키를 확인하세요.`;
+      if (/\b429\b|rate.?limit/i.test(m))
+        return `${provider} 요청 한도를 초과했습니다. 잠시 후 다시 시도하세요.`;
+      if (/\b400\b/.test(m))
+        return `${provider} 요청이 거부되었습니다(400). 사유: ${m.replace(/^400:?\s*/, '') || '프롬프트·옵션 값을 확인하세요.'}`;
+      if (/Failed to fetch|NetworkError|CORS/i.test(m))
+        return `네트워크 또는 CORS 문제로 ${provider}에 연결하지 못했습니다. 브라우저 직접 호출이 차단되었을 수 있습니다.`;
+      if (/\b50\d\b/.test(m))
+        return `${provider} 서버 오류가 발생했습니다. 잠시 후 다시 시도하세요.`;
+      return `${provider} 처리 중 오류가 발생했습니다. (${m || '알 수 없는 오류'})`;
+    }
+
+    // Blob 다운로드 (원격 URL은 fetch→blob, 실패 시 새 탭)
+    async function downloadMedia(url, filename) {
+      try {
+        let blob;
+        if (url.startsWith('blob:') || url.startsWith('data:')) {
+          blob = await (await fetch(url)).blob();
+        } else {
+          blob = await (await fetch(url)).blob();
+        }
+        const a = document.createElement('a');
+        const objUrl = URL.createObjectURL(blob);
+        a.href = objUrl; a.download = filename;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(objUrl), 4000);
+      } catch {
+        window.open(url, '_blank'); // CORS 등으로 실패 시 직접 열기
+      }
+    }
+
+    // 갤러리 누적
+    function pushGallery(item) {
+      history.unshift(item);
+      galleryEmpty.style.display = 'none';
+      galleryGrid.style.display = 'grid';
+      const div = document.createElement('div');
+      div.className = 'gallery-item';
+      const badge = item.type === 'image' ? '이미지' : item.type === 'video' ? '영상' : '오디오';
+      let inner;
+      if (item.type === 'image') inner = `<img src="${item.src}" alt="">`;
+      else if (item.type === 'video') inner = `<video src="${item.src}" muted${item.poster ? ` poster="${item.poster}"` : ''}></video>`;
+      else inner = `<span style="font-size:32px;">🎧</span>`;
+      div.innerHTML = `${inner}<span class="gi-badge">${badge}</span><button class="gi-dl">저장</button>`;
+      div.querySelector('.gi-dl').addEventListener('click', () => downloadMedia(item.src, item.filename));
+      galleryGrid.prepend(div);
+    }
+
+    // ── 영상 + 내레이션 합치기 (Canvas + MediaRecorder, 브라우저 네이티브) ──
+    let lastVideoList = [];    // 마지막 제작한 영상 목록 [{src,poster,duration}]
+    let lastNarrationUrl = ''; // 마지막 내레이션 오디오 blob URL
+
+    function ratioDims(ratio) {
+      if (ratio === '9:16') return [720, 1280];
+      if (ratio === '1:1') return [720, 720];
+      return [1280, 720]; // 16:9 기본
+    }
+
+    // 최종 영상 파일명: "주제_YYYYMMDD_HHmmss.mp4"
+    function finalFilename() {
+      const now = new Date();
+      const p = n => String(n).padStart(2, '0');
+      const stamp = `${now.getFullYear()}${p(now.getMonth() + 1)}${p(now.getDate())}_${p(now.getHours())}${p(now.getMinutes())}${p(now.getSeconds())}`;
+      const subj = (state.subject.trim() || '무제')
+        .replace(/[\\/:*?"<>|]+/g, '').replace(/\s+/g, '_').slice(0, 40);
+      return `${subj}_${stamp}.mp4`;
+    }
+
+    // 재생 시간(targetSec) 기준으로 클립을 이어붙이고 내레이션(선택)을 얹어 최종 webm 생성 → blob URL 반환
+    async function buildFinalVideo(videoList, audioUrl, targetSec, statusEl, outEl) {
+      const [W, H] = ratioDims(state.videoRatio);
+      const fps = 30;
+
+      // 오디오 준비 (선택) — blob → WebAudio MediaStream
+      let audioEl = null, ac = null;
+      if (audioUrl) {
+        audioEl = new Audio();
+        audioEl.src = audioUrl;
+        audioEl.crossOrigin = 'anonymous';
+        try {
+          await new Promise((res, rej) => {
+            audioEl.onloadedmetadata = res;
+            audioEl.onerror = () => rej(new Error('audio'));
+          });
+        } catch { audioEl = null; } // 오디오 실패해도 무음 영상은 생성
+      }
+
+      // 영상 엘리먼트 준비 (CORS 익명)
+      statusEl.textContent = `영상 ${videoList.length}개 로드 중…`;
+      const vids = videoList.map(v => {
+        const el = document.createElement('video');
+        el.crossOrigin = 'anonymous';
+        el.src = v.src;
+        el.muted = true;
+        el.playsInline = true;
+        el.preload = 'auto';
+        return el;
+      });
+      await Promise.all(vids.map(el => new Promise((res, rej) => {
+        el.onloadeddata = res;
+        el.onerror = () => rej(new Error('영상 로드 실패 (CORS 차단 가능)'));
+      })));
+
+      // 캔버스 + 스트림
+      const canvas = document.createElement('canvas');
+      canvas.width = W; canvas.height = H;
+      const ctx = canvas.getContext('2d');
+      const canvasStream = canvas.captureStream(fps);
+
+      // 오디오 트랙 결합 (있을 때)
+      if (audioEl) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        ac = new AC();
+        const srcNode = ac.createMediaElementSource(audioEl);
+        const destNode = ac.createMediaStreamDestination();
+        srcNode.connect(destNode);
+        canvasStream.addTrack(destNode.stream.getAudioTracks()[0]);
+        await ac.resume();
+      }
+
+      // 레코더
+      const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
+        ? 'video/webm;codecs=vp9,opus'
+        : (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus') ? 'video/webm;codecs=vp8,opus' : 'video/webm');
+      const rec = new MediaRecorder(canvasStream, { mimeType: mime });
+      const chunks = [];
+      rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+      const stopped = new Promise(res => { rec.onstop = res; });
+
+      // 재생 시간(targetSec)을 클립 수로 균등 분배
+      const perClip = targetSec / vids.length;
+      let cur = 0;
+      function coverDraw(v) {
+        const vr = v.videoWidth / v.videoHeight;
+        let dw, dh, dx, dy;
+        if (vr > W / H) { dh = H; dw = H * vr; dx = (W - dw) / 2; dy = 0; }
+        else { dw = W; dh = W / vr; dx = 0; dy = (H - dh) / 2; }
+        ctx.drawImage(v, dx, dy, dw, dh);
+      }
+      // 내레이션을 25자(띄어쓰기 포함) 이내 조각으로 분할 — 생략 없이 전체를 순차 표시
+      function splitCaption(text) {
+        const s = (text || '').replace(/\s+/g, ' ').trim();
+        if (!s) return [];
+        const words = s.split(' ');
+        const segs = []; let line = '';
+        for (const w of words) {
+          // 단어 자체가 25자 초과면 강제로 잘라 넣음
+          if ([...w].length > 25) {
+            if (line) { segs.push(line); line = ''; }
+            let rest = [...w];
+            while (rest.length) { segs.push(rest.slice(0, 25).join('')); rest = rest.slice(25); }
+            continue;
+          }
+          const test = line ? line + ' ' + w : w;
+          if ([...test].length > 25 && line) { segs.push(line); line = w; }
+          else line = test;
+        }
+        if (line) segs.push(line);
+        return segs;
+      }
+      // 화면 하단 자막 — 1행 렌더 (자르지 않음)
+      function drawCaptionLine(s) {
+        if (!s) return;
+        const fs = Math.round(H * 0.05);
+        ctx.font = `500 ${fs}px Inter, "Malgun Gothic", sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const y = H - H * 0.09;
+        const tw = ctx.measureText(s).width;
+        const padX = fs * 0.6, padY = fs * 0.4;
+        ctx.fillStyle = 'rgba(0,0,0,0.55)';
+        ctx.fillRect(W / 2 - tw / 2 - padX, y - fs / 2 - padY, tw + padX * 2, fs + padY * 2);
+        ctx.lineWidth = Math.max(2, fs * 0.12);
+        ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeText(s, W / 2, y);
+        ctx.fillText(s, W / 2, y);
+      }
+      // 클립별 자막 조각 미리 계산
+      const capSegs = videoList.map(v => splitCaption(v.caption));
+
+      rec.start();
+      statusEl.textContent = '최종 영상 렌더링 중… (재생 시간만큼 진행)';
+      vids[0].currentTime = 0;
+      await vids[0].play();
+      if (audioEl) { audioEl.currentTime = 0; audioEl.play().catch(() => {}); }
+
+      let startTs = null, finished = false;
+      function tick(ts) {
+        if (finished) return;
+        if (startTs === null) startTs = ts;
+        const t = (ts - startTs) / 1000; // 경과 초 (재생 시간 기준 클록)
+        const idx = Math.min(vids.length - 1, Math.floor(t / perClip));
+        if (idx !== cur) {
+          vids[cur].pause();
+          cur = idx;
+          vids[cur].currentTime = 0;
+          vids[cur].play().catch(() => {});
+        }
+        if (vids[cur].ended) { vids[cur].currentTime = 0; vids[cur].play().catch(() => {}); }
+        coverDraw(vids[cur]);
+        // 하단 자막: 클립 내 경과시간에 따라 조각을 순차 표시(생략 없음)
+        const segs = capSegs[cur] || [];
+        if (segs.length) {
+          const within = t - cur * perClip;
+          const segDur = perClip / segs.length;
+          const si = Math.min(segs.length - 1, Math.max(0, Math.floor(within / segDur)));
+          drawCaptionLine(segs[si]);
+        }
+        if (t >= targetSec) {
+          finished = true;
+          rec.stop();
+          vids.forEach(v => v.pause());
+          if (audioEl) audioEl.pause();
+          return;
+        }
+        requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+
+      await stopped;
+      if (ac) ac.close();
+      const blob = new Blob(chunks, { type: 'video/webm' });
+      return URL.createObjectURL(blob);
+    }
+
+    // 장면별 내레이션(오디오)을 타임라인에 스케줄하고 클립·자막을 그에 맞춰 동기화한 최종 webm 생성
+    async function buildFinalVideoSynced(clips, statusEl, outEl) {
+      const [W, H] = ratioDims(state.videoRatio);
+      const fps = 30;
+
+      // 영상 로드
+      statusEl.textContent = `영상 ${clips.length}개 로드 중…`;
+      const vids = clips.map(c => {
+        const el = document.createElement('video');
+        el.crossOrigin = 'anonymous'; el.src = c.src;
+        el.muted = true; el.playsInline = true; el.preload = 'auto';
+        return el;
+      });
+      await Promise.all(vids.map(el => new Promise((res, rej) => {
+        el.onloadeddata = res;
+        el.onerror = () => rej(new Error('영상 로드 실패 (CORS 차단 가능)'));
+      })));
+
+      // 오디오 디코드 → 장면 세그먼트(길이 = 내레이션 길이)
+      statusEl.textContent = '내레이션 오디오 준비 중…';
+      const AC = window.AudioContext || window.webkitAudioContext;
+      const ac = new AC();
+      const segs = [];
+      for (let i = 0; i < clips.length; i++) {
+        let buffer = null, dur = 3;
+        if (clips[i].audioUrl) {
+          try {
+            const ab = await (await fetch(clips[i].audioUrl)).arrayBuffer();
+            buffer = await ac.decodeAudioData(ab);
+            dur = buffer.duration;
+          } catch { buffer = null; dur = 3; }
+        }
+        segs.push({ vi: i, buffer, dur: Math.max(0.8, dur), caption: clips[i].caption || '' });
+      }
+      let acc = 0;
+      segs.forEach(s => { s.start = acc; acc += s.dur; });
+      const total = acc;
+
+      // 캔버스 + 스트림
+      const canvas = document.createElement('canvas');
+      canvas.width = W; canvas.height = H;
+      const ctx = canvas.getContext('2d');
+      const canvasStream = canvas.captureStream(fps);
+      const dest = ac.createMediaStreamDestination();
+      canvasStream.addTrack(dest.stream.getAudioTracks()[0]);
+
+      // 레코더
+      const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
+        ? 'video/webm;codecs=vp9,opus'
+        : (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus') ? 'video/webm;codecs=vp8,opus' : 'video/webm');
+      const rec = new MediaRecorder(canvasStream, { mimeType: mime });
+      const chunks = [];
+      rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+      const stopped = new Promise(res => { rec.onstop = res; });
+
+      // 그리기 헬퍼
+      function coverDraw(v) {
+        const vr = v.videoWidth / v.videoHeight;
+        let dw, dh, dx, dy;
+        if (vr > W / H) { dh = H; dw = H * vr; dx = (W - dw) / 2; dy = 0; }
+        else { dw = W; dh = W / vr; dx = 0; dy = (H - dh) / 2; }
+        ctx.drawImage(v, dx, dy, dw, dh);
+      }
+      function splitCaption(text) {
+        const s = (text || '').replace(/\s+/g, ' ').trim();
+        if (!s) return [];
+        const words = s.split(' ');
+        const out = []; let line = '';
+        for (const w of words) {
+          if ([...w].length > 25) {
+            if (line) { out.push(line); line = ''; }
+            let rest = [...w];
+            while (rest.length) { out.push(rest.slice(0, 25).join('')); rest = rest.slice(25); }
+            continue;
+          }
+          const test = line ? line + ' ' + w : w;
+          if ([...test].length > 25 && line) { out.push(line); line = w; }
+          else line = test;
+        }
+        if (line) out.push(line);
+        return out;
+      }
+      function drawCaptionLine(s) {
+        if (!s) return;
+        const fs = Math.round(H * 0.05);
+        ctx.font = `500 ${fs}px Inter, "Malgun Gothic", sans-serif`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        const y = H - H * 0.09;
+        const tw = ctx.measureText(s).width;
+        const padX = fs * 0.6, padY = fs * 0.4;
+        ctx.fillStyle = 'rgba(0,0,0,0.55)';
+        ctx.fillRect(W / 2 - tw / 2 - padX, y - fs / 2 - padY, tw + padX * 2, fs + padY * 2);
+        ctx.lineWidth = Math.max(2, fs * 0.12);
+        ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeText(s, W / 2, y);
+        ctx.fillText(s, W / 2, y);
+      }
+      const capSegs = segs.map(s => splitCaption(s.caption));
+
+      // 오디오 스케줄 (동일 클록 base 사용 → 영상·자막과 정확히 동기)
+      await ac.resume();
+      const base = ac.currentTime + 0.15;
+      segs.forEach(s => {
+        if (s.buffer) {
+          const node = ac.createBufferSource();
+          node.buffer = s.buffer;
+          node.connect(dest);
+          node.connect(ac.destination); // 모니터링
+          node.start(base + s.start);
+        }
+      });
+
+      rec.start();
+      statusEl.textContent = '최종 영상 렌더링 중… (나레이션·자막 동기)';
+      vids[0].currentTime = 0;
+      await vids[0].play();
+
+      let cur = -1, finished = false;
+      function tick() {
+        if (finished) return;
+        const t = ac.currentTime - base;
+        if (t < 0) { requestAnimationFrame(tick); return; }
+        let si = segs.findIndex(s => t >= s.start && t < s.start + s.dur);
+        if (si < 0) si = segs.length - 1;
+        if (si !== cur) {
+          if (cur >= 0) vids[cur].pause();
+          cur = si; vids[cur].currentTime = 0; vids[cur].play().catch(() => {});
+        }
+        if (vids[cur].ended) { vids[cur].currentTime = 0; vids[cur].play().catch(() => {}); }
+        coverDraw(vids[cur]);
+        const cs = capSegs[cur] || [];
+        if (cs.length) {
+          const within = t - segs[cur].start;
+          const segDur = segs[cur].dur / cs.length;
+          const ci = Math.min(cs.length - 1, Math.max(0, Math.floor(within / segDur)));
+          drawCaptionLine(cs[ci]);
+        }
+        if (t >= total) {
+          finished = true; rec.stop();
+          vids.forEach(v => v.pause());
+          return;
+        }
+        requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+
+      await stopped;
+      ac.close();
+      const blob = new Blob(chunks, { type: 'video/webm' });
+      return URL.createObjectURL(blob);
+    }
+
+    // ── 제작하기 ──
+    const generateBtn = document.getElementById('generateBtn');
+    generateBtn.addEventListener('click', async () => {
+      // 1단계에서 생성된 영문 프롬프트(편집분 포함) 우선, 없으면 주제+스타일
+      const genPrompt = psEn.value.trim();
+      const promptText = genPrompt
+        || [state.subject.trim(), state.style].filter(Boolean).join(', ');
+      // Pexels 검색어: 주제 우선, 없으면 생성 프롬프트 앞부분에서 키워드 추출
+      const firstWords = genPrompt.split(/[,.\n]/)[0].split(/\s+/).slice(0, 6).join(' ').trim();
+      const keyword = state.subject.trim() || firstWords || 'abstract';
+
+      if (state.mode === 'image') {
+        if (!keys.openai) { showError('이미지 제작에는 OpenAI API 키가 필요합니다. 설정에서 입력하세요.'); return; }
+        if (!promptText) { showError('이미지 프롬프트가 비어 있습니다. 주제를 입력하거나 프롬프트를 먼저 생성하세요.'); return; }
+        generateBtn.disabled = true;
+        showLoading('OpenAI 이미지 모델로 생성하는 중…');
+        try {
+          const res = await fetch('https://api.openai.com/v1/images/generations', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${keys.openai}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              model: 'gpt-image-1',
+              prompt: promptText,
+              n: 1,
+              size: state.imageSize.replace('×', 'x')
+            })
+          });
+          if (!res.ok) throw new Error(await apiErrorMessage(res));
+          const data = await res.json();
+          // 응답 형식이 b64_json 또는 url 로 올 수 있어 둘 다 처리
+          const item = data.data[0];
+          const src = item.b64_json ? `data:image/png;base64,${item.b64_json}` : item.url;
+          const filename = `image_${Date.now()}.png`;
+          resultArea.innerHTML = `
+            <div class="result-media"><div class="media-card">
+              <div class="mc-head">
+                <span class="mc-tag">🖼️ 이미지 · ${state.imageSize}</span>
+                <button class="dl-btn" id="dlMain">⬇ 다운로드</button>
+              </div>
+              <img src="${src}" alt="생성 이미지">
+            </div></div>`;
+          document.getElementById('dlMain').addEventListener('click', () => downloadMedia(src, filename));
+          pushGallery({ type: 'image', src, filename });
+        } catch (err) {
+          showError(friendlyError(err, 'OpenAI'));
+        } finally {
+          generateBtn.disabled = false;
+        }
+
+      } else {
+        // 영상 모드
+        if (!keys.pexels) { showError('영상 제작에는 Pexels API 키가 필요합니다. 설정에서 입력하세요.'); return; }
+        generateBtn.disabled = true;
+        showLoading(`Pexels에서 스톡 영상 ${state.videoCount}개를 검색하는 중…`);
+        try {
+          const orient = state.videoRatio === '16:9' ? 'landscape'
+            : state.videoRatio === '9:16' ? 'portrait' : 'square';
+          const durStr = state.videoDuration;
+          const targetSec = durStr.includes('분') ? parseInt(durStr) * 60 : parseInt(durStr);
+
+          // 클립 목록 구성: 대본 장면이 있으면 장면별 키워드로 각각 검색, 없으면 단일 검색
+          let clipList = [];
+          const useScenes = scriptScenes.length > 0;
+          if (useScenes) {
+            showLoading(`대본 ${scriptScenes.length}개 장면별로 Pexels 영상을 검색하는 중…`);
+            const found = await Promise.all(scriptScenes.map(async (sc) => {
+              const q = (sc.visual || state.subject.trim() || keyword).trim();
+              try {
+                const r = await fetch(
+                  `https://api.pexels.com/videos/search?query=${encodeURIComponent(q)}&orientation=${orient}&per_page=3`,
+                  { headers: { 'Authorization': keys.pexels } }
+                );
+                if (!r.ok) return null;
+                const d = await r.json();
+                if (!d.videos || !d.videos.length) return null;
+                const vid = d.videos[0];
+                const f = vid.video_files.find(x => x.quality === 'hd') || vid.video_files[0];
+                return { src: f.link, poster: vid.image, duration: vid.duration, caption: (sc.narration || '').trim(), visual: q };
+              } catch { return null; }
+            }));
+            clipList = found.filter(Boolean);
+            if (!clipList.length) throw new Error('검색 결과 없음');
+          } else {
+            showLoading(`Pexels에서 스톡 영상 ${state.videoCount}개를 검색하는 중…`);
+            const res = await fetch(
+              `https://api.pexels.com/videos/search?query=${encodeURIComponent(keyword)}&orientation=${orient}&per_page=${state.videoCount}`,
+              { headers: { 'Authorization': keys.pexels } }
+            );
+            if (!res.ok) throw new Error(await apiErrorMessage(res));
+            const data = await res.json();
+            if (!data.videos || !data.videos.length) throw new Error('검색 결과 없음');
+            const sorted = data.videos.slice().sort((a, b) =>
+              Math.abs(a.duration - targetSec) - Math.abs(b.duration - targetSec));
+            clipList = sorted.map(vid => {
+              const f = vid.video_files.find(x => x.quality === 'hd') || vid.video_files[0];
+              return { src: f.link, poster: vid.image, duration: vid.duration, caption: '', visual: keyword };
+            });
+          }
+
+          // 미리보기 그리드 (5열)
+          const cellsHTML = clipList.map((c, i) => `
+              <div class="video-cell">
+                <video src="${c.src}" poster="${c.poster}" controls preload="none"></video>
+                <div class="vc-foot">
+                  <span class="vc-meta">#${i + 1} · ${c.duration}초</span>
+                  <button class="vc-dl" data-vsrc="${c.src}" data-vname="clip_${Date.now()}_${i + 1}.mp4">저장</button>
+                </div>
+              </div>`).join('');
+          resultArea.innerHTML = `
+            <div class="result-media">
+              <div class="progress-text" style="text-align:left;margin-bottom:4px;">🎬 ${clipList.length}개 클립 · ${state.videoRatio}${useScenes ? ' · 대본 장면 키워드 기반' : ` (목표 ${state.videoDuration} 정렬)`}</div>
+              <div class="video-grid">${cellsHTML}</div>
+              <div id="narrationSlot"></div>
+              <div id="mergeSlot"></div>
+            </div>`;
+          resultArea.querySelectorAll('.vc-dl[data-vsrc]').forEach(btn => {
+            btn.addEventListener('click', () => downloadMedia(btn.dataset.vsrc, btn.dataset.vname));
+          });
+          // 합치기용 클립 목록 저장(자막 caption 포함), 내레이션 URL 초기화
+          lastVideoList = clipList;
+          lastNarrationUrl = '';
+
+          // 1) 내레이션 생성 (대본 텍스트 기반, 옵션) — 갤러리 등록 안 함(미리듣기용)
+          let audioUrl = '';
+          let perSceneAudio = false;
+          const narrSlot = document.getElementById('narrationSlot');
+          if (state.narration && !keys.elevenlabs) {
+            narrSlot.innerHTML = `<div class="notice warn" style="display:block;">내레이션 생성에는 ElevenLabs API 키가 필요합니다. 무음으로 최종 영상을 생성합니다.</div>`;
+          } else if (state.narration && useScenes) {
+            // 장면별 내레이션(TTS) — 각 클립·자막과 정확히 동기
+            const voiceId = '21m00Tcm4TlvDq8ikWAM';
+            for (let i = 0; i < clipList.length; i++) {
+              narrSlot.innerHTML = `<div class="media-card"><div class="mc-head"><span class="mc-tag">🎧 장면별 내레이션 생성 중… (${i + 1}/${clipList.length})</span></div><div class="spinner" style="margin:8px auto;"></div></div>`;
+              const txt = (clipList[i].caption || '').trim() || `${state.subject.trim() || '영상'} 장면 ${i + 1}`;
+              try {
+                const aRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+                  method: 'POST',
+                  headers: { 'xi-api-key': keys.elevenlabs, 'Content-Type': 'application/json', 'Accept': 'audio/mpeg' },
+                  body: JSON.stringify({ text: txt, model_id: 'eleven_multilingual_v2' })
+                });
+                if (!aRes.ok) throw new Error(await apiErrorMessage(aRes));
+                clipList[i].audioUrl = URL.createObjectURL(await aRes.blob());
+              } catch { clipList[i].audioUrl = ''; }
+            }
+            perSceneAudio = clipList.some(c => c.audioUrl);
+            const okN = clipList.filter(c => c.audioUrl).length;
+            narrSlot.innerHTML = `<div class="media-card"><div class="mc-head"><span class="mc-tag">🎧 장면별 내레이션 ${okN}개 생성 완료 · 자막·영상과 동기화됩니다</span></div></div>`;
+          } else if (state.narration) {
+            // 대본 없을 때: 단일 내레이션 (기존 방식)
+            const scriptNarr = narrationFromScriptText();
+            const narrText = scriptNarr || `${state.subject.trim() || '영상'}에 대한 내레이션입니다. ${state.style} 스타일의 장면입니다.`;
+            narrSlot.innerHTML = `<div class="media-card"><div class="mc-head"><span class="mc-tag">🎧 내레이션 생성 중…</span></div><div class="spinner" style="margin:8px auto;"></div></div>`;
+            try {
+              const voiceId = '21m00Tcm4TlvDq8ikWAM';
+              const aRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+                method: 'POST',
+                headers: { 'xi-api-key': keys.elevenlabs, 'Content-Type': 'application/json', 'Accept': 'audio/mpeg' },
+                body: JSON.stringify({ text: narrText, model_id: 'eleven_multilingual_v2' })
+              });
+              if (!aRes.ok) throw new Error(await apiErrorMessage(aRes));
+              audioUrl = URL.createObjectURL(await aRes.blob());
+              lastNarrationUrl = audioUrl;
+              narrSlot.innerHTML = `<div class="media-card"><div class="mc-head"><span class="mc-tag">🎧 내레이션 오디오 (미리듣기)</span></div><audio src="${audioUrl}" controls></audio></div>`;
+            } catch (err) {
+              narrSlot.innerHTML = `<div class="result-error" style="max-width:none;">⚠️ ${friendlyError(err, 'ElevenLabs')} — 무음으로 최종 영상을 생성합니다.</div>`;
+            }
+          }
+
+          // 최종 영상 합성
+          const finalSlot = document.getElementById('mergeSlot');
+          finalSlot.innerHTML = `
+            <div class="media-card">
+              <div class="mc-head"><span class="mc-tag">🎬 최종 영상</span></div>
+              <div class="progress-text" id="finalStatus" style="text-align:left;">최종 영상을 합성하는 중…</div>
+              <div id="finalResult" style="margin-top:12px;"></div>
+            </div>`;
+          const finalStatus = document.getElementById('finalStatus');
+          const finalResult = document.getElementById('finalResult');
+          try {
+            // 장면별 내레이션이 있으면 동기 빌더(길이=내레이션 합), 없으면 재생 시간 기준 빌더
+            const url = perSceneAudio
+              ? await buildFinalVideoSynced(clipList, finalStatus, finalResult)
+              : await buildFinalVideo(lastVideoList, audioUrl, targetSec, finalStatus, finalResult);
+            const fname = finalFilename();
+            finalStatus.textContent = '최종 영상 완료';
+            finalResult.innerHTML = `
+              <video src="${url}" controls style="width:100%;border-radius:8px;background:#000;max-height:440px;"></video>
+              <div style="margin-top:10px;text-align:right;">
+                <button class="dl-btn" id="finalDl">⬇ 최종 영상 다운로드</button>
+              </div>`;
+            document.getElementById('finalDl').addEventListener('click', () => downloadMedia(url, fname));
+            // 갤러리에는 최종 합쳐진 영상만 등록
+            pushGallery({ type: 'video', src: url, filename: fname });
+          } catch (err) {
+            finalStatus.textContent = '';
+            finalResult.innerHTML = `<div class="result-error" style="max-width:none;">⚠️ 최종 영상 합성 실패: ${err.message}. Pexels 영상이 CORS를 허용하지 않으면 브라우저에서 합칠 수 없습니다.</div>`;
+          }
+        } catch (err) {
+          if ((err.message || '') === '검색 결과 없음')
+            showError('입력한 주제로 검색된 스톡 영상이 없습니다. 주제를 바꿔 다시 시도하세요.');
+          else showError(friendlyError(err, 'Pexels'));
+        } finally {
+          generateBtn.disabled = false;
+        }
+      }
+    });
+
+    // 초기 렌더
+    applyTheme(localStorage.getItem(THEME_STORAGE) === 'dark' ? 'dark' : 'light'); // 저장된 테마 복원
+    loadKeys();            // 저장된 API 키 복원
+    renderSummary();
+    refreshPromptAvailability();
+  </script>
+</body>
+</html>
